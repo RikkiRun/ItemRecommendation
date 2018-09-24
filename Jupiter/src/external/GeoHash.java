@@ -1,4 +1,5 @@
 package external;
+//TicketMaster asked to use GeoPoint instead of latitude and longitude directly in request 
 
 //A copy from http://developer-should-know.com/post/87283491372/geohash-encoding-and-decoding-algorithm
 
