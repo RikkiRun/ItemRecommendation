@@ -7,6 +7,9 @@
 	init();
 	
 	function init() {
+		var nearbyBtn = document.getElementById('nearby-btn');
+		nearbyBtn.addEventListener('click', loadNearbyItems); // addEventListener to click item: callback function
+
 		initGeoLocation();
 	}
 	
@@ -174,11 +177,45 @@
 			var btn = document.getElementById(btnId);
 			btn.className += ' active';
 		}
-
+		
+		function getLocationFromIP() {
+			// Get location from http://ipinfo.io/json
+			var url = 'http://ipinfo.io/json'
+			var req = null;
+			
+			var xhr = new XMLHttpRequest();
+			
+			xhr.open('GET', url, true);
+			xhr.send();
+			
+			xhr.onload = function() {
+				if(xhr.status === 200) {
+					var result = JSON.parse(xhr.responseText);
+					if ('loc' in result) {
+						var loc = result.loc.split(',');
+						lat = loc[0];
+						lng = loc[1];
+					} else {
+						console.warn('Getting location by IP failed.');
+					}
+					loadNearbyItems();
+				} else if(xhr.status === 403) {
+					console.log('invalid session');
+				} else {
+					console.log('error');
+				}
+			}
+			
+			xhr.onerror = function() {
+				console.error("The request couldn't be completed.");
+				showErrorMessage("The request couldn't be completed.");
+			};
+		}
 
 		
 		function onLoadPositionFailed() {
-			console.log('location error');
+			console.warn('navigator.geolocation is not available');
+			getLocationFromIP();
 		}
 	}
 })() 
