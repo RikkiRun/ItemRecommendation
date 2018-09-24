@@ -6,7 +6,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+//parse and clean event array to only save data we want
 public class Item {
+	
 	private String itemId;
 	private String name;
 	private double rating;
@@ -20,6 +22,11 @@ public class Item {
 	/**
 	 * This is a builder pattern in Java.
 	 */
+	//Builder pattern builds a complex object using simple objects and using a step by step approach.
+	//It separates the construction of a complex object from its representation 
+	//so that the same construction process can create different representations. 
+	//We can also make the object to build immutable. 
+
 	private Item(ItemBuilder builder) {
 		this.itemId = builder.itemId;
 		this.name = builder.name;
@@ -57,6 +64,7 @@ public class Item {
 		return distance;
 	}
 	
+	// convert an item object a JSONObject instance : frontend code cannot understand Java class, it can only understand JSON
 	public JSONObject toJSONObject() {
 		JSONObject obj = new JSONObject();
 		try {
@@ -85,7 +93,7 @@ public class Item {
 		private String url;
 		private double distance;
 		
-
+//  generate setters for all data fields in ItemBuilder
 		public void setItemId(String itemId) {
 			this.itemId = itemId;
 		}
@@ -117,6 +125,8 @@ public class Item {
 		public void setDistance(double distance) {
 			this.distance = distance;
 		}
+		
+		// define a build function to create a ItemBuilder object from Item object
 
 		public Item build() {
 			return new Item(this);
