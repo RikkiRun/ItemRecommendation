@@ -2,6 +2,7 @@ package rpc;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -12,6 +13,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import entity.Item;
+import external.TicketMasterAPI;
 
 /**
  * Servlet implementation class SearchItem
@@ -34,32 +38,24 @@ public class SearchItem extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		//response.getWriter().append("Served at: ").append(request.getContextPath());
-		response.setContentType("application.json");
+		double lat = Double.parseDouble(request.getParameter("lat"));
+		double lon = Double.parseDouble(request.getParameter("lon"));
 		
+		String keyword = request.getParameter("term");
+		TicketMasterAPI ticketMasterAPI = new TicketMasterAPI();
+		List<Item> items = ticketMasterAPI.search(lat, lon, keyword);
 		
-		PrintWriter out = response.getWriter();
+		JSONArray array = new JSONArray();
 		
-//		if (request.getParameter("username")!= null) {
-//			String username = request.getParameter("username");
-			
-			JSONObject obj = new JSONObject();
-			JSONArray array = new JSONArray();
-			
-			try {
-//				obj.put("username", username);
-				array.put(new JSONObject().put("username", "rikki"));
-				array.put(new JSONObject().put("username", "zumii"));
-			} catch(JSONException e) {
-				e.printStackTrace();
+		try {
+			for(Item item: items) {
+				JSONObject object = item.toJSONObject();
+				array.put(object);
 			}
-			RpcHelper.writeJsonArray(response, array);
-			out.close();
-			
-//			out.print(array);
-//			out.print(obj);
-//			out.println("<html><body>");
-//			out.println("<h1>Hello " + username + "</h1>");
-//			out.println("</body></html>");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		RpcHelper.writeJsonArray(response, array);
 		}
 
 	/**

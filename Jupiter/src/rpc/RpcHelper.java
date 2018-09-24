@@ -18,6 +18,7 @@ public class RpcHelper {
 		out.print(array);
 		out.close();
 	}
+	
     // Writes a JSONObject to http response.
 	public static void writeJsonObject(HttpServletResponse response, JSONObject obj) throws IOException {
 		PrintWriter out = response.getWriter();
@@ -28,3 +29,4 @@ public class RpcHelper {
 }
 
 }
+ 
