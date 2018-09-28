@@ -13,6 +13,78 @@
 		initGeoLocation();
 	}
 	
+	function validateSession() {
+		   // The request parameters
+		   var url = 'http://34.222.78.188/TitanAuth/login';
+		   var req = JSON.stringify({});
+
+		   // display loading message
+		   console.log('Validating session...');
+
+		   // make AJAX call
+		   ajax('GET', url, req,
+		       // session is still valid
+		   function(res) {
+			   var result = JSON.parse(res);
+		       if (result.status === 'OK') {
+		    	   onSessionValid(result);
+		       }
+		   },
+		   onSessionInvalid, true);
+		}
+	
+	function onSessionInvalid() {
+		var loginForm = $('login-form');
+	   	var itemNav = $('item-nav');
+		var itemList = $('item-list');
+		var avatar = $('avatar');
+		var welcomeMsg = $('welcome-msg');
+		//var logoutBtn = $('logout-link');
+		
+		hideElement(itemNav);
+		hideElement(itemList);
+		hideElement(avatar);
+		hideElement(welcomeMsg);
+		//hideElement(logoutBtn);
+
+		showElement(loginForm);
+
+	}
+	
+	function onSessionValid(result) {
+		   user_id = result.user_id;
+		   user_fullname = result.name;
+
+		   var loginForm = $('login-form');
+		   var itemNav = $('item-nav');
+		   var itemList = $('item-list');
+		   var avatar = $('avatar');
+		   var welcomeMsg = $('welcome-msg');
+		   //var logoutBtn = $('logout-link');
+		   
+		   showElement(itemNav);
+		   showElement(itemList);
+		   showElement(avatar);
+		   showElement(welcomeMsg);
+		   //showElement(logoutBtn, 'inline-block');
+		   hideElement(loginForm);
+		   
+		   initGeoLocation();
+
+		}
+	
+	function showElement(element, style) {
+		   var displayStyle = style ? style : 'block';
+		   element.style.display = displayStyle;
+		}
+	function hideElement(element) {
+		   element.style.display = 'none';
+		}
+
+
+               
+
+	
 	function initGeoLocation() {
 		if (navigator.geolocation) {
 			navigator.geolocation.getCurrentPosition(onPositionUpdated,
@@ -24,12 +96,7 @@
 			onLoadPositionFailed();
 		}
 
-		
-		function showLoadingMessage(msg) {
-			var itemList = document.getElementById('item-list');
-			itemList.innerHTML = '<p class="notice"><i class="fa fa-spinner fa-spin"></i> '
-					+ msg + '</p>';
-		}
+
 		
 		
 		function onPositionUpdated(position) {
@@ -217,5 +284,219 @@
 			console.warn('navigator.geolocation is not available');
 			getLocationFromIP();
 		}
+		
+		
+		function login() {
+			var username = $('username').value;
+			var password = $('password').value;
+			password = md5(username + md5(password));
+
+			// The request parameters
+			var url = 'http://34.211.21.63/EventAuth/login';
+			var req = JSON.stringify({
+				user_id : username,
+				password : password,
+			});
+
+			ajax('POST', url, req,
+			// successful callback
+			function(res) {
+				var result = JSON.parse(res);
+
+				// successfully logged in
+				if (result.status === 'OK') {
+					onSessionValid(result);
+				}
+			},
+
+			// error
+			function() {
+				showLoginError();
+			}, 
+			true);
+		}
+
+		function showLoginError() {
+			$('login-error').innerHTML = 'Invalid username or password';
+		}
+
+		function clearLoginError() {
+			$('login-error').innerHTML = '';
+		}
+
+		function logout() {
+			onSessionInvalid();
+		}
+		// -----------------------------------
+		// Helper Functions
+		// -----------------------------------
+
+		/**
+		 * A helper function that makes a navigation button active
+		 * 
+		 * @param btnId -
+		 *            The id of the navigation button
+		 */
+
+		
+		function showLoadingMessage(msg) {
+			var itemList = document.getElementById('item-list');
+			itemList.innerHTML = '<p class="notice"><i class="fa fa-spinner fa-spin"></i> '
+					+ msg + '</p>';
+		}
+
+		function showWarningMessage(msg) {
+			var itemList = document.getElementById('item-list');
+			itemList.innerHTML = '<p class="notice"><i class="fa fa-exclamation-triangle"></i> '
+					+ msg + '</p>';
+		}
+
+		function showErrorMessage(msg) {
+			var itemList = document.getElementById('item-list');
+			itemList.innerHTML = '<p class="notice"><i class="fa fa-exclamation-circle"></i> '
+					+ msg + '</p>';
+		}
+		
+		
+		// -------------------------------------
+		// AJAX call server-side APIs
+		// -------------------------------------
+
+		/**
+		 * API #1 Load the nearby items API end point: [GET]
+		 * /Dashi/search?user_id=1111&lat=37.38&lon=-122.08
+		 */
+		function loadNearbyItems() {
+			console.log('loadNearbyItems');
+			activeBtn('nearby-btn');
+
+			// The request parameters
+			var url = './search';
+			var params = 'user_id=' + user_id + '&lat=' + lat + '&lon=' + lng;
+			var req = JSON.stringify({});
+
+			// display loading message
+			showLoadingMessage('Loading nearby items...');
+
+			// make AJAX call
+			ajax('GET', url + '?' + params, req,
+			// successful callback
+			function(res) {
+				var items = JSON.parse(res);
+				if (!items || items.length === 0) {
+					showWarningMessage('No nearby item.');
+				} else {
+					listItems(items);
+				}
+			},
+			// failed callback
+			function() {
+				showErrorMessage('Cannot load nearby items.');
+			}, true);
+		}
+
+		/**
+		 * API #2 Load favorite (or visited) items API end point: [GET]
+		 * /Dashi/history?user_id=1111
+		 */
+		function loadFavoriteItems() {
+			activeBtn('fav-btn');
+
+			// The request parameters
+			var url = 'http://34.211.21.63/EventAuth/history';
+			var params = 'user_id=' + user_id;
+			var req = JSON.stringify({});
+
+			// display loading message
+			showLoadingMessage('Loading favorite items...');
+
+			// make AJAX call
+			ajax('GET', url + '?' + params, req, function(res) {
+				var items = JSON.parse(res);
+				if (!items || items.length === 0) {
+					showWarningMessage('No favorite item.');
+				} else {
+					listItems(items);
+				}
+			}, function() {
+				showErrorMessage('Cannot load favorite items.');
+			}, true);
+		}
+
+		/**
+		 * API #3 Load recommended items API end point: [GET]
+		 * /Dashi/recommendation?user_id=1111
+		 */
+		function loadRecommendedItems() {
+			activeBtn('recommend-btn');
+
+			// The request parameters
+			var url = 'http://34.211.21.63/EventAuth/recommendation';
+			var params = 'user_id=' + user_id + '&lat=' + lat + '&lon=' + lng;
+
+			var req = JSON.stringify({});
+
+			// display loading message
+			showLoadingMessage('Loading recommended items...');
+
+			// make AJAX call
+			ajax(
+					'GET',
+					url + '?' + params,
+					req,
+					// successful callback
+					function(res) {
+						var items = JSON.parse(res);
+						if (!items || items.length === 0) {
+							showWarningMessage('No recommended item. Make sure you have favorites.');
+						} else {
+							listItems(items);
+						}
+					},
+					// failed callback
+					function() {
+						showErrorMessage('Cannot load recommended items.');
+					}, 
+					true);
+		}
+
+		/**
+		 * API #4 Toggle favorite (or visited) items
+		 * 
+		 * @param item_id -
+		 *            The item business id
+		 * 
+		 * API end point: [POST]/[DELETE] /Dashi/history request json data: {
+		 * user_id: 1111, visited: [a_list_of_business_ids] }
+		 */
+		function changeFavoriteItem(item_id) {
+			// Check whether this item has been visited or not
+			var li = $('item-' + item_id);
+			var favIcon = $('fav-icon-' + item_id);
+			var favorite = li.dataset.favorite !== 'true';
+
+			// The request parameters
+			var url = 'http://34.211.21.63/EventAuth/history';
+			var req = JSON.stringify({
+				user_id : user_id,
+				favorite : [ item_id ]
+			});
+			var method = favorite ? 'POST' : 'DELETE';
+
+			ajax(method, url, req,
+			// successful callback
+			function(res) {
+				var result = JSON.parse(res);
+				if (result.status === 'OK') {
+					li.dataset.favorite = favorite;
+					favIcon.className = favorite ? 'fa fa-heart' : 'fa fa-heart-o';
+				}
+			},
+			function() {
+				showErrorMessage('Cannot update favorite items.');
+			},
+			true);
+		}
+		
 	}
 })() 
