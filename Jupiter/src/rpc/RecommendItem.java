@@ -2,6 +2,7 @@ package rpc;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -12,6 +13,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.mysql.cj.xdevapi.Result;
+
+//import com.sun.org.apache.bcel.internal.generic.NEW;
+
+import algorithm.GeoRecommendation;
+import entity.Item;
 
 /**
  * Servlet implementation class RecommendItem
@@ -35,21 +43,32 @@ public class RecommendItem extends HttpServlet {
 		// TODO Auto-generated method stub
 //		response.getWriter().append("Served at: ").append(request.getContextPath());
 		
-		response.setContentType("application/json");
+		String userId = request.getParameter("user_id");
+		double lat = Double.parseDouble(request.getParameter("lat"));
+		double lon = Double.parseDouble(request.getParameter("lon"));
+		GeoRecommendation recommendation = new GeoRecommendation();
+		List<Item> items = recommendation.recommendedItems(userId, lat, lon);
+		
+		
+//		response.setContentType("application/json");
 		
 		PrintWriter out = response.getWriter();
-		
-		JSONArray array = new JSONArray();
+		JSONArray result = new JSONArray();
+		//??????
 		
 		try {
-			array.put(new JSONObject().put("username", "rikki").put("address", "Seattle").put("time", "05/01/2019"));
-			array.put(new JSONObject().put("username", "zumii").put("address", "Shanghai").put("time", "08/01/2016"));
-		} catch(JSONException e) {
+			for(Item item:items) {
+				
+				result.put(item.toJSONObject());
+			}
+//			array.put(new JSONObject().put("username", "rikki").put("address", "Seattle").put("time", "05/01/2019"));
+//			array.put(new JSONObject().put("username", "zumii").put("address", "Shanghai").put("time", "08/01/2016"));
+		} catch(Exception e) {
 			e.printStackTrace();
 		
 		}
 		
-		RpcHelper.writeJsonArray(response, array);
+		RpcHelper.writeJsonArray(response, result);
 //		out.print(array);
 		out.close();
 		
