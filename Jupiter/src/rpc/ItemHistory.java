@@ -85,7 +85,7 @@ public class ItemHistory extends HttpServlet {
 			connection.close();
 		}
 	}
-
+	
 	/**
 	 * @see HttpServlet#doDelete(HttpServletRequest, HttpServletResponse)
 	 */
